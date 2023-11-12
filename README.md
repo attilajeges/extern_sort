@@ -51,3 +51,6 @@ While doing the initial sort on larger file chunks, Seastar will log warnings ab
 In this particular case, stalling the event loop doesn't cause too much trouble. There are no concurrent events that the event loop should handle in the meantime anyway.
 
 I tried to solve the issue by sorting in a Seastar thread and calling `thread::yield()` every couple iterations during sorting but it didn't help. I don't have time to further investigate this.
+
+## Testing
+`extern_sort` was only tested manually. I didn't write any automated tests due to the limited time frame. 
