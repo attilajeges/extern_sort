@@ -47,7 +47,7 @@ You can use as many intermediary files as you want.
    Found 0 duplicate records.
    ```
 ## Issues
-While doing the initial sort on larger file chunks, seastar will complain about stalling the event loop. This is expected and normally should be avoided.
+While doing the initial sort on larger file chunks, Seastar will log warnings about stalling the event loop. This is expected and normally should be avoided.
 In this particular case, stalling the event loop doesn't cause too much trouble. There are no concurrent events that the event loop should handle in the meantime anyway.
 
-I tried to solve the issue by calling `thread::yield()` every couple iterations during sorting but it didn't help. I didn't have time to further investigate this.
+I tried to solve the issue by calling `thread::yield()` every couple iterations during sorting but it didn't help. I don't have time to further investigate this.
