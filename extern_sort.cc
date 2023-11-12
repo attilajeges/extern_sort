@@ -218,8 +218,8 @@ std::vector<SortTask> get_sort_tasks(size_t fsize, size_t sort_buf_size) {
 
 
 // External sorts the input file.
-// It will try to schedule sort & merge tasks on differenrt shards whenever possible.
-future<sstring> concurrent_extern_sort(const sstring &fn, size_t fsize, size_t sort_buf_size) {
+// It will try to schedule sort & merge tasks on differenrt shards in parallel whenever possible.
+future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sort_buf_size) {
     std::vector<SortTask> sort_tasks = get_sort_tasks(fsize, sort_buf_size);
 
     return async([sort_tasks=std::move(sort_tasks), fn] {
@@ -316,7 +316,7 @@ size_t calc_sort_buf_size(size_t fsize, size_t max_sort_buf_size) {
 }
 
 // Entry point for external sorting.
-future<> extern_sort(const sstring &fn, size_t max_sort_buf_size, bool clean) {
+future<> extern_sort(const sstring &fn, size_t max_sort_buf_size) {
     return when_all_succeed(
         file_size(fn),
         file_accessible(fn, access_flags::exists | access_flags::read),
@@ -329,7 +329,7 @@ future<> extern_sort(const sstring &fn, size_t max_sort_buf_size, bool clean) {
 
         size_t sort_buf_size = calc_sort_buf_size(fsize, max_sort_buf_size);
         LOG.info("Using sort_buf_size={}", sort_buf_size);
-        return concurrent_extern_sort(fn, fsize, sort_buf_size);
+        return parallel_extern_sort(fn, fsize, sort_buf_size);
     }).then([fn](sstring fn_merged) {
         sstring fn_sorted = fn + ".sorted";
         std::rename(fn_merged.data(), fn_sorted.data());
