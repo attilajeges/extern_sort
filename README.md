@@ -25,7 +25,7 @@ You can use as many intermediary files as you want.
 2. Build `extern_sort` executable using Seastar from its build directory:
    ```
    $ export SEASTAR_DIR='/path/to/seastar'
-   $ g++ -Wall -std=c++20 -I "$SEASTAR_DIR/include" $(pkg-config --libs --cflags --static "$SEASTAR_DIR/build/release/seastar.pc") -o extern_sort main.cc extern_sort.cc
+   $ g++ main.cc extern_sort.cc -Wall -std=c++20 -I "$SEASTAR_DIR/include" $(pkg-config --libs --cflags --static "$SEASTAR_DIR/build/release/seastar.pc") -o extern_sort
    ```
 ## Running
 1. Create a test input file with random data of a given size
