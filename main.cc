@@ -5,7 +5,7 @@
 
 namespace po = boost::program_options;
 
-extern seastar::future<> extern_sort(seastar::sstring filename, size_t max_sort_buf_size, bool clean);
+extern seastar::future<> extern_sort(const seastar::sstring &filename, size_t max_sort_buf_size, bool clean);
 
 int main(int argc, char** argv) {
     seastar::app_template app;

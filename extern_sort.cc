@@ -73,7 +73,7 @@ sstring get_filename(std::string_view prefix) {
 }
 
 // Reads a chunk of file from a given offset to a buffer
-future<> read_chunk(sstring fn, temporary_buffer<char>& rbuf, size_t off, size_t chunk_size) {
+future<> read_chunk(const sstring &fn, temporary_buffer<char>& rbuf, size_t off, size_t chunk_size) {
     return with_file(open_file_dma(fn, open_flags::ro), [&rbuf, off, chunk_size] (file& f) {
         return f.dma_read(off, rbuf.get_write(), chunk_size).then([&rbuf, chunk_size] (size_t count) {
             assert(count == chunk_size);
@@ -82,7 +82,7 @@ future<> read_chunk(sstring fn, temporary_buffer<char>& rbuf, size_t off, size_t
 }
 
 // Writes entire buffer to a file
-future<> write_chunk(sstring fn, temporary_buffer<char>& wbuf) {
+future<> write_chunk(const sstring &fn, temporary_buffer<char>& wbuf) {
     return with_file(open_file_dma(fn, wflags), [&wbuf] (file& f) {
         return f.dma_write(0, wbuf.get(), wbuf.size()).then([&wbuf] (size_t count) {
             assert(count == wbuf.size());
@@ -91,7 +91,7 @@ future<> write_chunk(sstring fn, temporary_buffer<char>& wbuf) {
 }
 
 // Sorts chunk_size chunk of a file from a given offset
-future<sstring> sort_chunk(sstring fn, size_t off, size_t chunk_size) {
+future<sstring> sort_chunk(const sstring &fn, size_t off, size_t chunk_size) {
 		sstring fn_out = get_filename("sort");
     LOG.info("Sorting {} range [{}, {}) -> {}", fn, off, off + chunk_size, fn_out);
 
@@ -112,7 +112,7 @@ future<sstring> sort_chunk(sstring fn, size_t off, size_t chunk_size) {
 }
 
 // Makes an output stream that automatically closes the underlying file on failure
-future<output_stream<char>> make_output_stream(std::string_view fn) {
+future<output_stream<char>> make_output_stream(const sstring &fn) {
     return with_file_close_on_failure(open_file_dma(fn, wflags), [] (file f) {
         return make_file_output_stream(std::move(f), aligned_size);
     });
@@ -219,10 +219,10 @@ std::vector<SortTask> get_sort_tasks(size_t fsize, size_t sort_buf_size) {
 
 // External sorts the input file.
 // It will try to schedule sort & merge tasks on differenrt shards whenever possible.
-future<sstring> concurrent_extern_sort(sstring fn, size_t fsize, size_t sort_buf_size) {
+future<sstring> concurrent_extern_sort(const sstring &fn, size_t fsize, size_t sort_buf_size) {
     std::vector<SortTask> sort_tasks = get_sort_tasks(fsize, sort_buf_size);
 
-    return async([sort_tasks=std::move(sort_tasks), fn=std::move(fn)] {
+    return async([sort_tasks=std::move(sort_tasks), fn] {
         std::deque<sstring> merge_queue;
         std::vector<future<sstring>> futures;
         size_t shard_id = 0;
@@ -316,7 +316,7 @@ size_t calc_sort_buf_size(size_t fsize, size_t max_sort_buf_size) {
 }
 
 // Entry point for external sorting.
-future<> extern_sort(sstring fn, size_t max_sort_buf_size, bool clean) {
+future<> extern_sort(const sstring &fn, size_t max_sort_buf_size, bool clean) {
     return when_all_succeed(
         file_size(fn),
         file_accessible(fn, access_flags::exists | access_flags::read),
