@@ -295,10 +295,10 @@ future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sor
 }
 
 future<> check_params(size_t max_sort_buf_size) {
-    if (max_sort_buf_size % record_size != 0) {
+    if (max_sort_buf_size == 0 || max_sort_buf_size % record_size != 0) {
        std::ostringstream os;
        os << "max_sort_buf_size (" << max_sort_buf_size
-          << ") must be multiple of record size (" << record_size << ")";
+          << ") must be positive and a multiple of record size (" << record_size << ")";
        throw std::invalid_argument(os.str());
     }
     return make_ready_future<>();

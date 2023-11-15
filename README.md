@@ -42,9 +42,10 @@ You can use as many intermediary files as you want.
    ```
 3. A python script (requires python 3.11) is included to do a simple verification on the resulting file
    ```
-   $ ./check-sorted-file.py  data.txt.sorted
+   $ ./check-sorted-file.py  data.txt.sorted  data.txt
    File data.txt.sorted is sorted.
    Found 0 duplicate records.
+   Found all selected input records in data.txt.sorted.
    ```
 ## Issues
 While doing the initial sort on larger file chunks, Seastar will log warnings about stalling the event loop. This is expected and normally should be avoided.
