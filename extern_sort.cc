@@ -1,8 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <compare>
-#include <cstdio>
-#include <deque>
+#include <queue>
 #include <vector>
 #include <sstream>
 
@@ -20,7 +19,6 @@
 #include <seastar/core/when_all.hh>
 #include <seastar/util/file.hh>
 #include <seastar/util/log.hh>
-#include <seastar/util/tmp_file.hh>
 
 
 using namespace seastar;
@@ -223,7 +221,7 @@ future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sor
     std::vector<SortTask> sort_tasks = get_sort_tasks(fsize, sort_buf_size);
 
     return async([sort_tasks=std::move(sort_tasks), fn] {
-        std::deque<sstring> merge_queue;
+        std::queue<sstring> merge_queue;
         std::vector<future<sstring>> futures;
         size_t shard_id = 0;
         size_t i = 0;
@@ -234,7 +232,7 @@ future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sor
                 shard_id = 0;
                 futures.clear();
                 for (const sstring &fn: fnames) {
-                    merge_queue.emplace_back(fn);
+                    merge_queue.emplace(fn);
                 }
             }
         };
@@ -276,10 +274,10 @@ future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sor
             // If a merge task finishes, the resulting intermediary file is put in merge_queue.
             while (merge_queue.size() > 1) {
                 sstring fn1 = merge_queue.front();
-                merge_queue.pop_front();
+                merge_queue.pop();
     
                 sstring fn2 = merge_queue.front();
-                merge_queue.pop_front();
+                merge_queue.pop();
     
                 futures.push_back(
                     smp::submit_to(shard_id++, smp_submit_to_options(), [fn1=std::move(fn1), fn2=std::move(fn2)] {
@@ -289,8 +287,6 @@ future<sstring> parallel_extern_sort(const sstring &fn, size_t fsize, size_t sor
                 resolve_filled_up_futures();
             }
         }
-
-        throw std::logic_error("Unexpected failure");
     });
 }
 
